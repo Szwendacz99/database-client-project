@@ -9,8 +9,6 @@ class Table:
         class for storing table, both structure and data
         """
         self.name = name
-        self.column_num = None
-        self.row_num = None
 
         # 2D table for storing names and types of columns
         # {index: (name, datatype)}
@@ -28,15 +26,13 @@ class Table:
         """
         if len(name.replace(" ", "")) == "":
             return False
-        self.columns[self.column_num] = (name, datatype)
-
-        self.column_num += 1
+        self.columns[self.cols_num()] = (name, datatype)
 
         for row in self.rows:
             if datatype in (Datatype.REAL, Datatype.ITEGER):
-                row[self.column_num-1] = 0.0
+                row[self.cols_num()-1] = 0.0
             else:
-                row[self.column_num-1] = ""
+                row[self.cols_num()-1] = ""
 
     def insert_into_cell(self, column_index: int, item, row_reference: list) -> None:
         if check_data_type(item) != self.columns[column_index][1]:
@@ -45,12 +41,22 @@ class Table:
         row_reference[column_index] = item
 
     def add_row(self, *args):
-        if len(args) != self.column_num:
+        if len(args) != self.cols_num():
             raise TableException(self.name, "Inserted data dont match column amount of the table")
         new_row = []
-        for i in range(self.column_num):
+        for i in range(self.cols_num()):
             self.insert_into_cell(i, args[i], new_row)
         self.rows.append(new_row)
         settings.debug(f"To table {self.name} succesfully inserted data: {args}")
 
+    def cols_num(self) -> int:
+        """
+        :return: number of columns in this table
+        """
+        return len(self.columns)
 
+    def rows_num(self) -> int:
+        """
+        :return: number of rows in this table
+        """
+        return len(self.rows)
