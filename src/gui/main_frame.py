@@ -1,6 +1,6 @@
 import PyQt5.QtCore
 from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, QGroupBox, QHBoxLayout, QPushButton, \
-    QDockWidget
+    QDockWidget, QTableWidget, QHeaderView, QTableWidgetItem
 import src.settings as settings
 from PyQt5.QtCore import Qt
 
@@ -12,10 +12,12 @@ class MainFrame(QMainWindow):
         Main Window class
         """
         super().__init__()
+
         self.central_widget = None
         self.tabs = None
         self.table_list = None
         self.table_list_dockable = None
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -24,11 +26,13 @@ class MainFrame(QMainWindow):
         :return: None
         """
         settings.debug("Setting up GUI....")
-        self.resize(300, 120)
+        self.resize(1200, 900)
 
         self.create_central_widget()
+        self.create_docking_tables_list_panel()
 
-        self.setWindowTitle('Test')
+        self.setWindowTitle('Database Client')
+        self.show()
 
     def create_central_widget(self):
         """
@@ -52,6 +56,31 @@ class MainFrame(QMainWindow):
         box.setLayout(layout_buttons)
         layout.addWidget(box, 0, 0, 4, 10)
 
+        self.tabs = QTabWidget(self.central_widget)
+
+        tabletest = QTableWidget()
+        tabletest.setRowCount(3)
+        tabletest.setColumnCount(3)
+        # header = QHeaderView(Qt.Horizontal, tabletest)
+        # header.tex
+        tabletest.setHorizontalHeaderItem(0, QTableWidgetItem("column 1"))
+        tabletest.setHorizontalHeaderItem(1, QTableWidgetItem("column 2"))
+        tabletest.setHorizontalHeaderItem(2, QTableWidgetItem("column 3"))
+
+        for i in range(3):
+            for j in range(3):
+                tabletest.setItem(i, j, QTableWidgetItem(f"item {i}:{j}"))
+        self.tabs.addTab(tabletest, "Table test")
+
+        layout.addWidget(self.tabs, 4, 0, 100, 10)
+        self.central_widget.setLayout(layout)
+        self.setCentralWidget(self.central_widget)
+
+    def create_docking_tables_list_panel(self):
+        """
+        Create docking widget with list of tables
+        :return: None
+        """
         self.table_list_dockable = QDockWidget("Tables", self)
         self.table_list = QListWidget(self.central_widget)
         self.table_list.addItem("tab1")
@@ -70,15 +99,6 @@ class MainFrame(QMainWindow):
         self.table_list.addItem("tab4")
         self.table_list_dockable.setWidget(self.table_list)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.table_list_dockable)
-        # layout.addWidget(self.table_list_dockable, 0, 0, 10, 1)
-
-        self.tabs = QTabWidget(self.central_widget)
-
-        layout.addWidget(self.tabs, 4, 0, 100, 10)
-        self.central_widget.setLayout(layout)
-        self.setCentralWidget(self.central_widget)
-
-
 
 
 
