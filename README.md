@@ -1,2 +1,2 @@
 # database-client-project
-Database client project for university subject
+Program imitating database client project for university subject
