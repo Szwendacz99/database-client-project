@@ -13,29 +13,32 @@ class Table:
         """
         self.name = name
 
-        # 2D table for storing names and types of columns
-        # {index: (name, datatype)}
+        # dictionary for storing names and types of columns
+        # {name: datatype}
         self.columns = {}
         # 2D table for storing rows data
         self.rows = []
 
-    def add_column(self, name: str, datatype: Datatype) -> bool:
+    def add_column(self, col: tuple) -> None:
         """
-        Add new columnt, and fill it with default value for
+        Add new column, and fill it with default value for
         its datatype if this table have any rows
-        :param name:
-        :param datatype:
+        :param col: tuple (name, Datatype)
         :return:
         """
+        name, datatype = col
         if len(name.replace(" ", "")) == "":
-            return False
+            raise TableException(self.name, additional_info="Name of column have to have some letters")
+        if self.columns.get(name) is not None:
+            raise TableException(self.name, f"Columnt with name {name} already exists!")
+
         self.columns[self.cols_num()] = (name, datatype)
 
         for row in self.rows:
             if datatype in (Datatype.REAL, Datatype.ITEGER):
-                row[self.cols_num()-1] = 0.0
+                row.append(0.0)
             else:
-                row[self.cols_num()-1] = ""
+                row.append("")
 
     def insert_into_cell(self, column_index: int, item, row_reference: list) -> None:
         if check_data_type(item) != self.columns[column_index][1]:

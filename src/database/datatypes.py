@@ -16,6 +16,6 @@ class Datatype(Enum):
     """
     Enum with integer types to be easily compared
     """
-    ITEGER = 1
-    STRING = 2
-    REAL = 3
+    ITEGER = "Integer"
+    STRING = "String"
+    REAL = "Real"

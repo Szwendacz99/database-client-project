@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, Q
     QDockWidget, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt
 
+from src.database.database import Database
+from src.gui.newtabledialog import NewTableDialog
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +16,8 @@ class MainFrame(QMainWindow):
         Main Window class
         """
         super().__init__()
+
+        self.database = Database()
 
         self.central_widget = None
         self.tabs = None
@@ -50,7 +54,11 @@ class MainFrame(QMainWindow):
         box = QGroupBox(self)
         layout_buttons = QHBoxLayout()
         layout_buttons.setAlignment(Qt.AlignLeft)
-        layout_buttons.addWidget(QPushButton("button 1"), alignment=Qt.AlignLeft)
+
+        b_add_table = QPushButton("Add new table")
+        b_add_table.clicked.connect(self.add_new_table)
+        layout_buttons.addWidget(b_add_table, alignment=Qt.AlignLeft)
+
         layout_buttons.addWidget(QPushButton("button 2"), alignment=Qt.AlignLeft)
         layout_buttons.addWidget(QPushButton("button 3"), alignment=Qt.AlignLeft)
         layout_buttons.addWidget(QPushButton("button 4"), alignment=Qt.AlignLeft)
@@ -63,8 +71,6 @@ class MainFrame(QMainWindow):
         tabletest = QTableWidget()
         tabletest.setRowCount(3)
         tabletest.setColumnCount(3)
-        # header = QHeaderView(Qt.Horizontal, tabletest)
-        # header.tex
         tabletest.setHorizontalHeaderItem(0, QTableWidgetItem("column 1"))
         tabletest.setHorizontalHeaderItem(1, QTableWidgetItem("column 2"))
         tabletest.setHorizontalHeaderItem(2, QTableWidgetItem("column 3"))
@@ -80,13 +86,31 @@ class MainFrame(QMainWindow):
 
     def create_docking_tables_list_panel(self):
         """
-        Create docking widget with list of tables
+        Create docking widget with sorted list of tables
         :return: None
         """
         self.table_list_dockable = QDockWidget("Tables", self)
         self.table_list = QListWidget(self.central_widget)
+        self.table_list.setSortingEnabled(True)
         self.table_list_dockable.setWidget(self.table_list)
+        self.table_list.doubleClicked.connect(self.show_table)
+
         self.addDockWidget(Qt.LeftDockWidgetArea, self.table_list_dockable)
 
+    def update_table_list(self):
+        table_list = self.database.list_tables_names()
+        self.table_list.clear()
+        for name in table_list:
+            self.table_list.addItem(name)
 
+    def add_new_table(self):
+        dialog = NewTableDialog()
+        # dialog.show()
+        dialog.exec()
+        if dialog.result is not None:
+            self.database.add_table(dialog.result)
+            self.update_table_list()
 
+    def show_table(self):
+        table_names = [item.text() for item in self.table_list.selectedItems()]
+        print(table_names)

@@ -8,10 +8,10 @@ class Database:
         self.tables = {}
 
     def list_tables_names(self) -> list:
-        return [name for name, table in self.tables]
+        return [name for name in self.tables]
 
     def add_table(self, table: Table):
-        if self.tables.get(table.name) is None:
+        if self.tables.get(table.name) is not None:
             raise TableExistsException(table.name)
         self.tables[table.name] = table
 
