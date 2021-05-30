@@ -2,10 +2,11 @@ import logging
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QPushButton, QDialog, QGridLayout, QLineEdit, \
-    QScrollArea, QComboBox
+    QScrollArea, QComboBox, QMessageBox
 
 from src.database.datatypes import Datatype
 from src.database.table import Table
+from src.exceptions import ClientException
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class NewTableDialog(QDialog):
         self.current_position = 0
         self.main_layout = None
         self.grid_layout = None
+        self.table_name_input = None
 
         self.result = None
 
@@ -46,7 +48,10 @@ class NewTableDialog(QDialog):
         layout_buttons.addWidget(b_create_table)
         buttons_panel.setLayout(layout_buttons)
 
-        self.main_layout.addWidget(buttons_panel, 0, 0, 1, 10)
+        self.table_name_input = QLineEdit()
+        self.table_name_input.setText("table name")
+        self.main_layout.addWidget(self.table_name_input, 0, 0, 1, 3)
+        self.main_layout.addWidget(buttons_panel, 0, 3, 1, 7)
         columns.setLayout(self.grid_layout)
         columns_scroll_box.setWidget(columns)
         columns_scroll_box.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -81,10 +86,22 @@ class NewTableDialog(QDialog):
             columns.append((name.widget().text(), datatype.widget().itemData(datatype.widget().currentIndex())))
         return columns
 
+    def show_error_dialog(self, error: ClientException):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText("Cannot create table")
+        msg.setInformativeText(str(error))
+        msg.setWindowTitle("Error")
+        msg.show()
+
     def create_table(self):
-        columns = self.get_columns()
-        table = Table("Test name")
-        for col in columns:
-            table.add_column(col)
+        try:
+            columns = self.get_columns()
+            table = Table(self.table_name_input.text())
+            for col in columns:
+                table.add_column(col)
+        except ClientException as e:
+            self.show_error_dialog(e)
+            return
         self.result = table
         self.accept()

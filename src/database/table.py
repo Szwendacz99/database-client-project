@@ -14,10 +14,13 @@ class Table:
         self.name = name
 
         # dictionary for storing names and types of columns
-        # {name: datatype}
-        self.columns = {}
+        # [(name: datatype)]
+        self.columns = []
         # 2D table for storing rows data
         self.rows = []
+
+    def get_columns_names(self) -> list:
+        return [x[0] for x in self.columns]
 
     def add_column(self, col: tuple) -> None:
         """
@@ -27,12 +30,12 @@ class Table:
         :return:
         """
         name, datatype = col
-        if len(name.replace(" ", "")) == "":
-            raise TableException(self.name, additional_info="Name of column have to have some letters")
-        if self.columns.get(name) is not None:
+        if len(name.replace(" ", "")) == 0:
+            raise TableException(self.name, additional_info="Name of column must have some letters")
+        if name in self.get_columns_names():
             raise TableException(self.name, f"Columnt with name {name} already exists!")
 
-        self.columns[self.cols_num()] = (name, datatype)
+        self.columns.append((name, datatype))
 
         for row in self.rows:
             if datatype in (Datatype.REAL, Datatype.ITEGER):
@@ -61,6 +64,9 @@ class Table:
             self.insert_into_cell(i, data[i], new_row)
         self.rows.append(new_row)
         log.debug(f"To table {self.name} succesfully inserted data: {data}")
+
+    def get(self, i, j):
+        return self.rows[i][j]
 
     def cols_num(self) -> int:
         """

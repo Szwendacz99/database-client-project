@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, Q
 from PyQt5.QtCore import Qt
 
 from src.database.database import Database
+from src.database.table import Table
 from src.gui.newtabledialog import NewTableDialog
 
 log = logging.getLogger(__name__)
@@ -59,26 +60,14 @@ class MainFrame(QMainWindow):
         b_add_table.clicked.connect(self.add_new_table)
         layout_buttons.addWidget(b_add_table, alignment=Qt.AlignLeft)
 
-        layout_buttons.addWidget(QPushButton("button 2"), alignment=Qt.AlignLeft)
-        layout_buttons.addWidget(QPushButton("button 3"), alignment=Qt.AlignLeft)
-        layout_buttons.addWidget(QPushButton("button 4"), alignment=Qt.AlignLeft)
+        b_close_table = QPushButton("Close table")
+        b_close_table.clicked.connect(self.close_table)
+        layout_buttons.addWidget(b_close_table, alignment=Qt.AlignLeft)
 
         box.setLayout(layout_buttons)
         layout.addWidget(box, 0, 0, 4, 10)
 
         self.tabs = QTabWidget(self.central_widget)
-
-        tabletest = QTableWidget()
-        tabletest.setRowCount(3)
-        tabletest.setColumnCount(3)
-        tabletest.setHorizontalHeaderItem(0, QTableWidgetItem("column 1"))
-        tabletest.setHorizontalHeaderItem(1, QTableWidgetItem("column 2"))
-        tabletest.setHorizontalHeaderItem(2, QTableWidgetItem("column 3"))
-
-        for i in range(3):
-            for j in range(3):
-                tabletest.setItem(i, j, QTableWidgetItem(f"item {i}:{j}"))
-        self.tabs.addTab(tabletest, "Table test")
 
         layout.addWidget(self.tabs, 4, 0, 100, 10)
         self.central_widget.setLayout(layout)
@@ -93,7 +82,7 @@ class MainFrame(QMainWindow):
         self.table_list = QListWidget(self.central_widget)
         self.table_list.setSortingEnabled(True)
         self.table_list_dockable.setWidget(self.table_list)
-        self.table_list.doubleClicked.connect(self.show_table)
+        self.table_list.doubleClicked.connect(self.show_selected_tables)
 
         self.addDockWidget(Qt.LeftDockWidgetArea, self.table_list_dockable)
 
@@ -111,6 +100,22 @@ class MainFrame(QMainWindow):
             self.database.add_table(dialog.result)
             self.update_table_list()
 
-    def show_table(self):
+    def show_table(self, table: Table):
+        table_widget = QTableWidget()
+        table_widget.setRowCount(table.rows_num())
+        table_widget.setColumnCount(table.cols_num())
+        for i, name in zip(range(table.cols_num()), table.get_columns_names()):
+            table_widget.setHorizontalHeaderItem(i, QTableWidgetItem(name))
+        for i in range(table.cols_num()):
+            for j in range(table.rows_num()):
+                table_widget.setItem(i, j, QTableWidgetItem(f"{table.get(i, j)}"))
+        self.tabs.addTab(table_widget, table.name)
+
+    def show_selected_tables(self):
         table_names = [item.text() for item in self.table_list.selectedItems()]
-        print(table_names)
+        for name in table_names:
+            table = self.database.get_table(name)
+            self.show_table(table)
+
+    def close_table(self):
+        self.tabs.removeTab(self.tabs.currentIndex())
