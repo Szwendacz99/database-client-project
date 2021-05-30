@@ -70,3 +70,4 @@ class Table:
         :return: number of rows in this table
         """
         return len(self.rows)
+
