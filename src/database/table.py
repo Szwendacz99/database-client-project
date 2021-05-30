@@ -1,6 +1,9 @@
+import logging
+
 from src.database.datatypes import Datatype, check_data_type
 from src.exceptions import BadDatatype, TableException
-import src.settings as settings
+
+log = logging.getLogger(__name__)
 
 
 class Table:
@@ -40,14 +43,21 @@ class Table:
                               f"column in table {self.name}, proper type: {self.columns[column_index][1]}")
         row_reference[column_index] = item
 
-    def add_row(self, *args):
-        if len(args) != self.cols_num():
+    def add_row(self, data: list):
+        """
+        add data to new row,
+        throws BadDatatype, TableException on error, and then data
+        is nt saved in table at all
+        :param data: list of elements of new Row
+        :return:
+        """
+        if len(data) != self.cols_num():
             raise TableException(self.name, "Inserted data dont match column amount of the table")
         new_row = []
         for i in range(self.cols_num()):
-            self.insert_into_cell(i, args[i], new_row)
+            self.insert_into_cell(i, data[i], new_row)
         self.rows.append(new_row)
-        settings.debug(f"To table {self.name} succesfully inserted data: {args}")
+        log.debug(f"To table {self.name} succesfully inserted data: {data}")
 
     def cols_num(self) -> int:
         """

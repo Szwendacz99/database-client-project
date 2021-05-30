@@ -1,8 +1,10 @@
-import PyQt5.QtCore
+import logging
 from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, QGroupBox, QHBoxLayout, QPushButton, \
-    QDockWidget, QTableWidget, QHeaderView, QTableWidgetItem
-import src.settings as settings
+    QDockWidget, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt
+
+
+log = logging.getLogger(__name__)
 
 
 class MainFrame(QMainWindow):
@@ -25,7 +27,7 @@ class MainFrame(QMainWindow):
         Create main window
         :return: None
         """
-        settings.debug("Setting up GUI....")
+        log.debug("Setting up GUI....")
         self.resize(1200, 900)
 
         self.create_central_widget()
@@ -40,7 +42,7 @@ class MainFrame(QMainWindow):
         and QTabWidget for main display in the center/right
         :return: None
         """
-        settings.debug("Creating central widget....")
+        log.debug("Creating central widget....")
         self.central_widget = QGroupBox(self)
         self.central_widget.setContentsMargins(5, 5, 5, 5)
         layout = QGridLayout()
