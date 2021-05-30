@@ -4,7 +4,6 @@ start wx framework and launch GUI
 """
 import logging
 
-import settings
 import sys
 
 from PyQt5.QtWidgets import QApplication
