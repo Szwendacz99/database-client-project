@@ -5,7 +5,8 @@ from PyQt5.QtCore import Qt
 
 from src.database.database import Database
 from src.database.table import Table
-from src.gui.newtabledialog import NewTableDialog
+from src.gui.new_row_dialog import NewRowDialog
+from src.gui.new_table_dialog import NewTableDialog
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +65,10 @@ class MainFrame(QMainWindow):
         b_close_table.clicked.connect(self.close_table)
         layout_buttons.addWidget(b_close_table, alignment=Qt.AlignLeft)
 
+        b_new_row = QPushButton("Add new row")
+        b_new_row.clicked.connect(self.add_new_row)
+        layout_buttons.addWidget(b_new_row, alignment=Qt.AlignLeft)
+
         box.setLayout(layout_buttons)
         layout.addWidget(box, 0, 0, 4, 10)
 
@@ -94,7 +99,6 @@ class MainFrame(QMainWindow):
 
     def add_new_table(self):
         dialog = NewTableDialog()
-        # dialog.show()
         dialog.exec()
         if dialog.result is not None:
             self.database.add_table(dialog.result)
@@ -119,3 +123,15 @@ class MainFrame(QMainWindow):
 
     def close_table(self):
         self.tabs.removeTab(self.tabs.currentIndex())
+
+    def add_new_row(self):
+        if self.tabs.currentIndex() == -1:
+            return
+        name = self.tabs.tabText(self.tabs.currentIndex())
+        table = self.database.get_table(name)
+        dialog = NewRowDialog(table)
+        # dialog.show()
+        dialog.exec()
+        if dialog.result is not None:
+            self.database.add_table(dialog.result)
+            self.update_table_list()

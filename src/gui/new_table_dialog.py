@@ -67,7 +67,7 @@ class NewTableDialog(QDialog):
         log.debug("New table adding dialog created")
 
     def add_new_column(self):
-        log.debug("New column widgets creating....")
+        log.debug("New column input widgets creating....")
         name = QLineEdit(self)
         name.setText("column name")
         self.grid_layout.addWidget(name, self.current_position, 0, 1, 7)

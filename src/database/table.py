@@ -7,10 +7,12 @@ log = logging.getLogger(__name__)
 
 
 class Table:
-    def __init__(self, name):
+    def __init__(self, name: str):
         """
         class for storing table, both structure and data
         """
+        if name.strip() == "":
+            raise TableException(name, additional_info="Inproper name of table")
         self.name = name
 
         # dictionary for storing names and types of columns
@@ -79,4 +81,3 @@ class Table:
         :return: number of rows in this table
         """
         return len(self.rows)
-
