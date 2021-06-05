@@ -9,6 +9,7 @@ from src.exceptions import ClientException
 
 log = logging.getLogger(__name__)
 
+
 def isfloat(str: str):
     try:
         float(str)
@@ -52,7 +53,7 @@ class SearchDialog(QDialog):
         buttons_panel.setLayout(layout_buttons)
 
         self.input = QLineEdit(self)
-        self.input.setText("lambda row: row[\"col1\"]>5 or row[\"col2\"]<4 and row[\"col3\"] == 3")
+        self.input.setText("lambda row: row[\"wzrost\"]>1.9")
         self.main_layout.addWidget(self.input, 0, 0, 1, 7)
 
         self.main_layout.addWidget(buttons_panel, 0, 7, 1, 3)
@@ -75,6 +76,7 @@ class SearchDialog(QDialog):
             for j in range(table.cols_num()):
                 table_widget.setItem(i, j, QTableWidgetItem(f"{table.get(i, j)}"))
         self.tabs.addTab(table_widget, table.name)
+        self.tabs.setCurrentIndex(self.tabs.count()-1)
 
     def show_error_dialog(self, error: ClientException):
         msg = QMessageBox(self)

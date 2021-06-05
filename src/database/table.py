@@ -73,6 +73,9 @@ class Table:
         self.rows.append(new_row)
         log.debug(f"To table {self.name} succesfully inserted data: {data}")
 
+    def delete_row(self, index: int):
+        self.rows.pop(index)
+
     def get(self, i, j):
         return self.rows[i][j]
 

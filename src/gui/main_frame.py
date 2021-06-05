@@ -1,11 +1,14 @@
 import logging
+import pickle
+
 from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, QGroupBox, QHBoxLayout, QPushButton, \
-    QDockWidget, QTableWidget, QTableWidgetItem, QMessageBox
-from PyQt5.QtCore import Qt
+    QDockWidget, QTableWidget, QTableWidgetItem, QMessageBox, QFileDialog
+from PyQt5.QtCore import Qt, QDir
 
 from src.database.database import Database
 from src.database.datatypes import Datatype
 from src.database.table import Table
+from src.exceptions import ClientException
 from src.gui.new_row_dialog import NewRowDialog
 from src.gui.new_table_dialog import NewTableDialog
 from src.gui.search_dialog import SearchDialog
@@ -78,9 +81,21 @@ class MainFrame(QMainWindow):
         b_new_row.clicked.connect(self.add_new_row)
         layout_buttons.addWidget(b_new_row, alignment=Qt.AlignLeft)
 
+        b_delete_row = QPushButton("Delete selected row")
+        b_delete_row.clicked.connect(self.delete_current_row)
+        layout_buttons.addWidget(b_delete_row, alignment=Qt.AlignLeft)
+
         b_search = QPushButton("Search in table")
         b_search.clicked.connect(self.search_dialog)
         layout_buttons.addWidget(b_search, alignment=Qt.AlignLeft)
+
+        b_save_to_file = QPushButton("Save to file")
+        b_save_to_file.clicked.connect(self.save_db_to_file)
+        layout_buttons.addWidget(b_save_to_file, alignment=Qt.AlignRight)
+
+        b_load_from_file = QPushButton("Load from file")
+        b_load_from_file.clicked.connect(self.load_from_file)
+        layout_buttons.addWidget(b_load_from_file, alignment=Qt.AlignRight)
 
         box.setLayout(layout_buttons)
         layout.addWidget(box, 0, 0, 4, 10)
@@ -135,6 +150,7 @@ class MainFrame(QMainWindow):
             for j in range(table.cols_num()):
                 table_widget.setItem(i, j, QTableWidgetItem(f"{table.get(i, j)}"))
         self.tabs.addTab(table_widget, table.name)
+        self.tabs.setCurrentIndex(self.tabs.count()-1)
 
     def show_selected_tables(self):
         table_names = [item.text() for item in self.table_list.selectedItems()]
@@ -167,7 +183,7 @@ class MainFrame(QMainWindow):
             self.show_table(table)
         self.tabs.setCurrentIndex(current_opened_index)
 
-    def delete_warning_dialog(self, info: str) -> bool:
+    def warning_dialog(self, info: str) -> bool:
 
         result = QMessageBox.question(self, "U sure?", info, QMessageBox.Ok | QMessageBox.Cancel, defaultButton= QMessageBox.Cancel )
         if result == QMessageBox.Ok:
@@ -177,7 +193,9 @@ class MainFrame(QMainWindow):
 
     def delete_table(self):
         current_tab_name = self.tabs.tabText(self.tabs.currentIndex())
-        should_delete = self.delete_warning_dialog(f"Do you really want to delete table \"{current_tab_name}\" ???")
+        if current_tab_name == "":
+            return
+        should_delete = self.warning_dialog(f"Do you really want to delete table \"{current_tab_name}\" ???")
         if should_delete:
             self.database.drop_table(current_tab_name)
             self.tabs.removeTab(self.tabs.currentIndex())
@@ -198,6 +216,61 @@ class MainFrame(QMainWindow):
         self.show_table(tab)
 
     def search_dialog(self):
+        if self.tabs.currentIndex() < 0:
+            return
         current_table = self.database.get_table(self.tabs.tabText(self.tabs.currentIndex()))
         dialog = SearchDialog(current_table)
         dialog.exec()
+
+    def show_error_dialog(self, main_text: str, error: Exception):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText(main_text)
+        msg.setInformativeText(str(error))
+        msg.setWindowTitle("Error")
+        msg.show()
+
+    def delete_current_row(self):
+        if not self.warning_dialog("Do you really want to delete selected row?"):
+            return
+        if self.tabs.currentIndex() < 0:
+            return
+        current_row_index = self.tabs.currentWidget().currentRow()
+
+        try:
+            self.database.get_table(self.tabs.tabText(self.tabs.currentIndex())).delete_row(current_row_index)
+        except Exception as e:
+            self.show_error_dialog("Cannot delete row", e)
+        self.refresh_view()
+
+    def save_db_to_file(self):
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setFilter(QDir.Files)
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilters({"Fake database files (*.fdb)", "Any files (*)"})
+        try:
+            dialog.exec()
+            with open(dialog.selectedFiles()[0], "wb") as file:
+                pickle.dump(self.database, file)
+        except Exception as e:
+            self.show_error_dialog("Error on saving to file", e)
+
+    def load_from_file(self):
+        if not self.warning_dialog("If you load data from file, current database will be lost, are you sure?"):
+            return
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setFilter(QDir.Files)
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setNameFilters({"Fake database files (*.fdb)", "Any files (*)"})
+        try:
+            dialog.exec()
+            with open(dialog.selectedFiles()[0], "rb") as file:
+                self.tabs.clear()
+                self.database = pickle.load(file)
+            self.update_table_list()
+            self.refresh_view()
+        except Exception as e:
+            self.show_error_dialog("Error on saving to file", e)
+

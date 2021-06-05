@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 class Database:
 
     def __init__(self):
+        # {name -> tableObject}
         self.tables = {}
 
     def list_tables_names(self) -> list:
