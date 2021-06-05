@@ -1,6 +1,6 @@
 from enum import Enum
 
-from src.exceptions import BadDatatype
+from src.exceptions import BadDatatypeException
 
 
 def check_data_type(item):
@@ -32,4 +32,4 @@ def convert(item, new_type: Datatype):
         elif new_type == Datatype.ITEGER:
             return int(item)
     except Exception:
-        raise BadDatatype(f"Cannot convert data \"{item}\" to {new_type}")
+        raise BadDatatypeException(f"Cannot convert data \"{item}\" to {new_type}")

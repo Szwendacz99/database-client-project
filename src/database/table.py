@@ -1,7 +1,7 @@
 import logging
 
 from src.database.datatypes import Datatype, check_data_type, convert
-from src.exceptions import BadDatatype, TableException
+from src.exceptions import BadDatatypeException, TableException
 
 log = logging.getLogger(__name__)
 
@@ -32,10 +32,11 @@ class Table:
         :return:
         """
         name, datatype = col
+        name = name.strip()
         if len(name.replace(" ", "")) == 0:
             raise TableException(self.name, additional_info="Name of column must have some letters")
         if name in self.get_columns_names():
-            raise TableException(self.name, f"Columnt with name {name} already exists!")
+            raise TableException(self.name, f"Column with name {name} already exists!")
 
         self.columns.append((name, datatype))
 
@@ -49,6 +50,12 @@ class Table:
         if check_data_type(item) != self.columns[column_index][1]:
             item = convert(item, self.columns[column_index][1])
         row_reference.append(item)
+
+    def get_column_index(self, name: str) -> int:
+        for i in range(len(self.columns)):
+            if self.columns[i][0] == name:
+                return i
+        raise TableException(self.name, f"Cannot find index of not existing column \"{name}\"")
 
     def add_row(self, data: list):
         """

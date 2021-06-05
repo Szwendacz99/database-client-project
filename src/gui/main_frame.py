@@ -4,9 +4,11 @@ from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, Q
 from PyQt5.QtCore import Qt
 
 from src.database.database import Database
+from src.database.datatypes import Datatype
 from src.database.table import Table
 from src.gui.new_row_dialog import NewRowDialog
 from src.gui.new_table_dialog import NewTableDialog
+from src.gui.search_dialog import SearchDialog
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +40,9 @@ class MainFrame(QMainWindow):
 
         self.create_central_widget()
         self.create_docking_tables_list_panel()
+
+        # Temporary
+        self.create_test_table()
 
         self.setWindowTitle('Database Client')
         self.show()
@@ -72,6 +77,10 @@ class MainFrame(QMainWindow):
         b_new_row = QPushButton("Add new row")
         b_new_row.clicked.connect(self.add_new_row)
         layout_buttons.addWidget(b_new_row, alignment=Qt.AlignLeft)
+
+        b_search = QPushButton("Search in table")
+        b_search.clicked.connect(self.search_dialog)
+        layout_buttons.addWidget(b_search, alignment=Qt.AlignLeft)
 
         box.setLayout(layout_buttons)
         layout.addWidget(box, 0, 0, 4, 10)
@@ -173,3 +182,22 @@ class MainFrame(QMainWindow):
             self.database.drop_table(current_tab_name)
             self.tabs.removeTab(self.tabs.currentIndex())
             self.update_table_list()
+
+    def create_test_table(self):
+        tab = Table("Test table")
+        tab.add_column(("col1", Datatype.ITEGER))
+        tab.add_column(("col2", Datatype.ITEGER))
+        tab.add_column(("col3", Datatype.ITEGER))
+        tab.add_row(["1", "2", "3"])
+        tab.add_row(["1", "22", "3"])
+        tab.add_row(["7", "2", "3"])
+        tab.add_row(["1", "-55", "3"])
+        tab.add_row(["1", "0", "3"])
+        self.database.add_table(tab)
+        self.update_table_list()
+        self.show_table(tab)
+
+    def search_dialog(self):
+        current_table = self.database.get_table(self.tabs.tabText(self.tabs.currentIndex()))
+        dialog = SearchDialog(current_table)
+        dialog.exec()

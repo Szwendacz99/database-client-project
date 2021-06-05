@@ -2,9 +2,8 @@ import logging
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QPushButton, QDialog, QGridLayout, QLineEdit, \
-    QScrollArea, QComboBox, QMessageBox, QLabel
+    QScrollArea, QMessageBox, QLabel
 
-from src.database.datatypes import Datatype
 from src.database.table import Table
 from src.exceptions import ClientException
 
@@ -21,7 +20,6 @@ class NewRowDialog(QDialog):
         self.main_layout = None
         self.grid_layout = None
         self.table_name_input = None
-        self.result = None
         self.table = table
 
         self.setup_ui()
