@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtWidgets import QListWidget, QMainWindow, QTabWidget, QGridLayout, QGroupBox, QHBoxLayout, QPushButton, \
-    QDockWidget, QTableWidget, QTableWidgetItem
+    QDockWidget, QTableWidget, QTableWidgetItem, QMessageBox
 from PyQt5.QtCore import Qt
 
 from src.database.database import Database
@@ -65,6 +65,10 @@ class MainFrame(QMainWindow):
         b_close_table.clicked.connect(self.close_table)
         layout_buttons.addWidget(b_close_table, alignment=Qt.AlignLeft)
 
+        b_delete_table = QPushButton("Delete table")
+        b_delete_table.clicked.connect(self.delete_table)
+        layout_buttons.addWidget(b_delete_table, alignment=Qt.AlignLeft)
+
         b_new_row = QPushButton("Add new row")
         b_new_row.clicked.connect(self.add_new_row)
         layout_buttons.addWidget(b_new_row, alignment=Qt.AlignLeft)
@@ -104,14 +108,22 @@ class MainFrame(QMainWindow):
             self.database.add_table(dialog.result)
             self.update_table_list()
 
+    def check_if_table_open(self, name: str):
+        for i in range(self.tabs.count()):
+            if name == self.tabs.tabText(i):
+                return True
+        return False
+
     def show_table(self, table: Table):
+        if self.check_if_table_open(table.name):
+            return
         table_widget = QTableWidget()
         table_widget.setRowCount(table.rows_num())
         table_widget.setColumnCount(table.cols_num())
         for i, name in zip(range(table.cols_num()), table.get_columns_names()):
             table_widget.setHorizontalHeaderItem(i, QTableWidgetItem(name))
-        for i in range(table.cols_num()):
-            for j in range(table.rows_num()):
+        for i in range(table.rows_num()):
+            for j in range(table.cols_num()):
                 table_widget.setItem(i, j, QTableWidgetItem(f"{table.get(i, j)}"))
         self.tabs.addTab(table_widget, table.name)
 
@@ -122,6 +134,7 @@ class MainFrame(QMainWindow):
             self.show_table(table)
 
     def close_table(self):
+        log.debug(f"closig view of currently opened tab with index {self.tabs.currentIndex()}")
         self.tabs.removeTab(self.tabs.currentIndex())
 
     def add_new_row(self):
@@ -130,8 +143,33 @@ class MainFrame(QMainWindow):
         name = self.tabs.tabText(self.tabs.currentIndex())
         table = self.database.get_table(name)
         dialog = NewRowDialog(table)
-        # dialog.show()
         dialog.exec()
-        if dialog.result is not None:
-            self.database.add_table(dialog.result)
+        self.refresh_view()
+
+    def refresh_view(self):
+        log.debug("Refreshing opened tabs view")
+        opened_tabs = []
+        current_opened_index = self.tabs.currentIndex()
+        for i in range(self.tabs.count()):
+            opened_tabs.append(self.tabs.tabText(i))
+        self.tabs.clear()
+        for name in opened_tabs:
+            table = self.database.get_table(name)
+            self.show_table(table)
+        self.tabs.setCurrentIndex(current_opened_index)
+
+    def delete_warning_dialog(self, info: str) -> bool:
+
+        result = QMessageBox.question(self, "U sure?", info, QMessageBox.Ok | QMessageBox.Cancel, defaultButton= QMessageBox.Cancel )
+        if result == QMessageBox.Ok:
+            return True
+        else:
+            return False
+
+    def delete_table(self):
+        current_tab_name = self.tabs.tabText(self.tabs.currentIndex())
+        should_delete = self.delete_warning_dialog(f"Do you really want to delete table \"{current_tab_name}\" ???")
+        if should_delete:
+            self.database.drop_table(current_tab_name)
+            self.tabs.removeTab(self.tabs.currentIndex())
             self.update_table_list()

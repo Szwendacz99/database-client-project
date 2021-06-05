@@ -1,5 +1,7 @@
 from enum import Enum
 
+from src.exceptions import BadDatatype
+
 
 def check_data_type(item):
     if isinstance(item, float):
@@ -19,3 +21,15 @@ class Datatype(Enum):
     ITEGER = "Integer"
     STRING = "String"
     REAL = "Real"
+
+
+def convert(item, new_type: Datatype):
+    try:
+        if new_type == Datatype.REAL:
+            return float(item)
+        elif new_type == Datatype.STRING:
+            return str(item)
+        elif new_type == Datatype.ITEGER:
+            return int(item)
+    except Exception:
+        raise BadDatatype(f"Cannot convert data \"{item}\" to {new_type}")

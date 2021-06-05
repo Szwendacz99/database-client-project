@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class NewRowDialog(QDialog):
 
-    def __init__(self, table):
+    def __init__(self, table: Table):
         super().__init__()
 
         self.central_widget = None
@@ -71,7 +71,7 @@ class NewRowDialog(QDialog):
         self.grid_layout.addWidget(input_field, self.current_position, 3, 1, 7)
         self.current_position += 1
 
-    def get_columns(self):
+    def get_row_data(self):
         columns = []
         for i in range(0, self.current_position):
             data = self.grid_layout.itemAtPosition(i, 9)
@@ -88,12 +88,7 @@ class NewRowDialog(QDialog):
 
     def insert(self):
         try:
-            columns = self.get_columns()
-            table = Table(self.table_name_input.text())
-            for col in columns:
-                table.add_column(col)
+            data = self.get_row_data()
+            self.table.add_row(data)
         except ClientException as e:
             self.show_error_dialog(e)
-            return
-        self.result = table
-        self.accept()

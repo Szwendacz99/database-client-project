@@ -1,6 +1,6 @@
 import logging
 
-from src.database.datatypes import Datatype, check_data_type
+from src.database.datatypes import Datatype, check_data_type, convert
 from src.exceptions import BadDatatype, TableException
 
 log = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class Table:
         self.name = name
 
         # dictionary for storing names and types of columns
-        # [(name: datatype)]
+        # [(name, datatype)]
         self.columns = []
         # 2D table for storing rows data
         self.rows = []
@@ -47,9 +47,8 @@ class Table:
 
     def insert_into_cell(self, column_index: int, item, row_reference: list) -> None:
         if check_data_type(item) != self.columns[column_index][1]:
-            raise BadDatatype(f"Cannot insert {type(item).__name__} into {self.columns[column_index][0]} "
-                              f"column in table {self.name}, proper type: {self.columns[column_index][1]}")
-        row_reference[column_index] = item
+            item = convert(item, self.columns[column_index][1])
+        row_reference.append(item)
 
     def add_row(self, data: list):
         """
